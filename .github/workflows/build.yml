@@ -40,7 +40,7 @@ jobs:
           xcodebuild -project Shaghil.xcodeproj -target Shaghil -configuration Release -sdk iphoneos \
             SYMROOT="$PWD/build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 \
             | tee build.log | grep -E "error:|warning: unre|BUILD (SUCCEEDED|FAILED)" || true
-          test -d build/Release-iphoneos/Shaghil.app || { grep -B2 -A8 "error:" build.log | head -200; exit 1; }
+          grep -q "BUILD SUCCEEDED" build.log || { grep -B2 -A8 "error:" build.log | head -200; exit 1; }
 
       - name: Ad-hoc sign with entitlements and package IPA
         run: |
