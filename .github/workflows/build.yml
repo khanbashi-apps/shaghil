@@ -5,8 +5,17 @@ on:
 permissions:
   contents: write
 jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "runners OK"
   build:
-    runs-on: macos-latest
+    # جهازان معاً: إن تأخر Mac الحديث يُبنى على Mac إنتل
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +95,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Shaghil-ipa
+          name: Shaghil-ipa-${{ matrix.os }}
           path: |
             out/Shaghil-1.0.ipa
             shots/*.png
@@ -95,5 +104,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v1.0 --yes --cleanup-tag || true
-          gh release create v1.0 out/Shaghil-1.0.ipa shots/*.png --title "شغّل 1.0" --notes "IPA غير موقّع (موقّع ad-hoc مع App Groups) — وقّعه بأداة التوقيع ثم ثبّته."
+          gh release view v1.0 >/dev/null 2>&1 || gh release create v1.0 --title "شغّل 1.0" --notes "IPA غير موقّع (موقّع ad-hoc مع App Groups) — وقّعه بأداة التوقيع ثم ثبّته." || true
+          gh release upload v1.0 out/Shaghil-1.0.ipa --clobber
+          ls shots/*.png >/dev/null 2>&1 && gh release upload v1.0 shots/*.png --clobber || true
