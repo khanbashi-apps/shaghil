@@ -20,6 +20,7 @@ final class RunSchemeHandler: NSObject, WKURLSchemeHandler {
         if path.hasPrefix("/") { path.removeFirst() }
         path = path.removingPercentEncoding ?? path
 
+        NSLog("SHAGHIL scheme start \(url.absoluteString)")
         let store = ProjectStore.shared
         var data: Data?
         var mime = "text/html"

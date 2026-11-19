@@ -85,12 +85,14 @@ jobs:
           run 1-empty 6
           run 2-home 7 -seedDemo
           run 3-code 7 -seedDemo -open code
-          run 4-run 9 -seedDemo -open run
+          run 4-run 4 -seedDemo -open run
+          shot 4-run-late 20
+          xcrun simctl spawn "$UDID" log show --last 1m --style compact --predicate 'process == "Shaghil" OR eventMessage CONTAINS "SHAGHIL" OR process CONTAINS "WebContent"' 2>/dev/null | grep -v "^Timestamp" | tail -80 > logs/4-syslog.txt || true
           run 5-fullscreen 9 -seedDemo -open full
           xcrun simctl ui "$UDID" appearance dark
           run 6-home-dark 6 -seedDemo
           xcrun simctl terminate "$UDID" $BID || true
-          for f in logs/*.txt; do echo "=== $f"; tail -40 "$f"; done
+          for f in logs/*.txt; do echo "=== $f"; tail -80 "$f"; done
           echo "=== crash reports"
           ls ~/Library/Logs/DiagnosticReports/ 2>/dev/null | grep -i shaghil || echo none
           for f in ~/Library/Logs/DiagnosticReports/Shaghil*; do [ -f "$f" ] || continue; echo "=== $f"; python3 - "$f" <<'PY'

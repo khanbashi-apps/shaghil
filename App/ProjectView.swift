@@ -224,6 +224,7 @@ struct ProjectView: View {
     // MARK: actions
 
     private func initialLoad() {
+        NSLog("SHAGHIL project appear \(projectID)")
         guard let p = project, loadedFile.isEmpty else { return }
         load(p.activeFile.isEmpty ? p.mainFile : p.activeFile, in: p)
         if router.openInPreview.remove(projectID) != nil, p.language.isRunnable || p.files.contains("index.html") {

@@ -73,6 +73,7 @@ struct ProjectWebView: UIViewRepresentable {
         wv.navigationDelegate = context.coordinator
         wv.uiDelegate = context.coordinator
         context.coordinator.token = reloadToken
+        NSLog("SHAGHIL webview make \(projectID)")
         wv.load(URLRequest(url: RunSchemeHandler.entryURL(projectID)))
         return wv
     }
@@ -117,7 +118,22 @@ struct ProjectWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            NSLog("SHAGHIL didFail \(error)")
             console?.add("error", error.localizedDescription)
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            NSLog("SHAGHIL didFailProvisional \(error)")
+            console?.add("error", error.localizedDescription)
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            NSLog("SHAGHIL didFinish \(webView.url?.absoluteString ?? "")")
+        }
+
+        func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            NSLog("SHAGHIL content process terminated — reloading")
+            webView.reload()
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
