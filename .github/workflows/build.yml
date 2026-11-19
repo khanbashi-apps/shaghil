@@ -79,18 +79,37 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           BID=om.khanbashi.shaghil
           shot() { sleep "$2"; xcrun simctl io "$UDID" screenshot "shots/$1.png"; }
-          xcrun simctl launch "$UDID" $BID; shot 1-empty 6
-          xcrun simctl terminate "$UDID" $BID
-          xcrun simctl launch "$UDID" $BID -seedDemo; shot 2-home 6
-          xcrun simctl terminate "$UDID" $BID
-          xcrun simctl launch "$UDID" $BID -seedDemo -open code; shot 3-code 6
-          xcrun simctl terminate "$UDID" $BID
-          xcrun simctl launch "$UDID" $BID -seedDemo -open run; shot 4-run 8
-          xcrun simctl terminate "$UDID" $BID
-          xcrun simctl launch "$UDID" $BID -seedDemo -open full; shot 5-fullscreen 8
+          run() { name=$1; wait=$2; shift 2; xcrun simctl terminate "$UDID" $BID 2>/dev/null || true; \
+            (xcrun simctl launch --console-pty "$UDID" $BID "$@" > "logs/$name.txt" 2>&1 &); shot "$name" "$wait"; }
+          mkdir -p logs
+          run 1-empty 6
+          run 2-home 7 -seedDemo
+          run 3-code 7 -seedDemo -open code
+          run 4-run 9 -seedDemo -open run
+          run 5-fullscreen 9 -seedDemo -open full
           xcrun simctl ui "$UDID" appearance dark
-          xcrun simctl terminate "$UDID" $BID
-          xcrun simctl launch "$UDID" $BID -seedDemo; shot 6-home-dark 6
+          run 6-home-dark 6 -seedDemo
+          xcrun simctl terminate "$UDID" $BID || true
+          for f in logs/*.txt; do echo "=== $f"; tail -40 "$f"; done
+          echo "=== crash reports"
+          ls ~/Library/Logs/DiagnosticReports/ 2>/dev/null | grep -i shaghil || echo none
+          for f in ~/Library/Logs/DiagnosticReports/Shaghil*; do [ -f "$f" ] || continue; echo "=== $f"; python3 - "$f" <<'PY'
+          import json,sys
+          t=open(sys.argv[1]).read(); parts=t.split('\n',1)
+          try:
+              d=json.loads(parts[1])
+              print(d.get('exception'), d.get('termination',{}).get('indicator'))
+              ft=d.get('faultingThread',0); th=d['threads'][ft]
+              imgs=d.get('usedImages',[])
+              for fr in th['frames'][:25]:
+                  im=imgs[fr['imageIndex']].get('name','?') if fr.get('imageIndex') is not None and fr['imageIndex']<len(imgs) else '?'
+                  print(im, fr.get('symbol','?'), fr.get('sourceFile',''), fr.get('sourceLine',''))
+              for k in ('asi','lastExceptionBacktrace'):
+                  if k in d: print(k, str(d[k])[:1500])
+          except Exception as e:
+              print('parse fail', e); print(t[:3000])
+          PY
+          cp "$f" logs/ ; done
           ls -la shots
 
       - uses: actions/upload-artifact@v4
@@ -99,6 +118,7 @@ jobs:
           path: |
             out/Shaghil-1.0.ipa
             shots/*.png
+            logs/*
 
       - name: Publish release (direct download)
         env:
