@@ -44,7 +44,7 @@ struct ProjectView: View {
         }
         .overlay(alignment: .top) { ToastView(text: $toast) }
         .onAppear(perform: initialLoad)
-        .onDisappear { saveNow() }
+        .onDisappear { NSLog("SHAGHIL project disappear"); saveNow() }
     }
 
     @ViewBuilder

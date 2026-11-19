@@ -3,7 +3,9 @@ import AppIntents
 
 final class Router: ObservableObject {
     static let shared = Router()
-    @Published var path: [String] = []
+    @Published var path: [String] = [] {
+        didSet { NSLog("SHAGHIL path \(oldValue) -> \(path)") }
+    }
     @Published var runID: String?
     @Published var pasteRequest = UUID?.none
     /// Projects that should open on the preview tab (just pasted / run from a link).

@@ -171,35 +171,28 @@ struct WidgetPayload: Codable, Hashable {
 // MARK: - Shared storage
 
 enum SharedStore {
-    static var groupURL: URL? {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppInfo.appGroup)
-    }
+    static let groupURL: URL? = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppInfo.appGroup)
 
     /// Root folder holding all projects. Uses the App Group when the signer kept it,
-    /// otherwise falls back to the app's Documents folder.
-    static var rootURL: URL {
-        let base: URL
-        if let g = groupURL {
-            base = g
-        } else {
-            base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        }
+    /// otherwise falls back to the app's Documents folder. Computed once.
+    static let rootURL: URL = {
+        let base = groupURL ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let url = base.appendingPathComponent("Shaghil", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
-    }
+    }()
 
-    static var projectsURL: URL {
+    static let projectsURL: URL = {
         let u = rootURL.appendingPathComponent("Projects", isDirectory: true)
         try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
         return u
-    }
+    }()
 
-    static var widgetURL: URL {
+    static let widgetURL: URL = {
         let u = rootURL.appendingPathComponent("Widget", isDirectory: true)
         try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
         return u
-    }
+    }()
 
     static var indexURL: URL { rootURL.appendingPathComponent("index.json") }
 

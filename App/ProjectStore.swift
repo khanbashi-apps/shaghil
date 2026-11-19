@@ -85,9 +85,17 @@ final class ProjectStore: ObservableObject {
         syncIndex()
     }
 
+    private var syncWork: DispatchWorkItem?
+
     func syncIndex() {
-        SharedStore.saveIndex(projects.map(\.summary))
-        WidgetCenter.shared.reloadAllTimelines()
+        syncWork?.cancel()
+        let w = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            SharedStore.saveIndex(self.projects.map(\.summary))
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        syncWork = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: w)
     }
 
     func project(_ id: String) -> Project? { projects.first { $0.id == id } }
